@@ -1,0 +1,65 @@
+[
+  {
+    "id": "RZ-1791353447895-B6BF",
+    "customer": {
+      "name": "zain",
+      "phone": "03322376456",
+      "address": "Mamunkanjan bangla chowk"
+    },
+    "items": [
+      {
+        "id": 1,
+        "name": "Chicken Pizza",
+        "price": 1200,
+        "quantity": 1
+      }
+    ],
+    "total": 1200,
+    "status": "completed",
+    "whatsappSent": false,
+    "createdAt": "2026-10-07T06:10:47.895Z",
+    "updatedAt": "2026-10-07T06:41:17.504Z"
+  },
+  {
+    "id": "RZ-1791353762638-505C",
+    "customer": {
+      "name": "yaseen",
+      "phone": "0331 3452456",
+      "address": "chak no. 553"
+    },
+    "items": [
+      {
+        "id": 6,
+        "name": "Chicken Burger",
+        "price": 450,
+        "quantity": 1
+      }
+    ],
+    "total": 450,
+    "status": "completed",
+    "whatsappSent": false,
+    "createdAt": "2026-10-07T06:16:02.638Z",
+    "updatedAt": "2026-10-07T06:41:13.283Z"
+  },
+  {
+    "id": "RZ-1791355742136-8893",
+    "customer": {
+      "name": "Ali",
+      "phone": "93324517890",
+      "address": "Tandly"
+    },
+    "items": [
+      {
+        "id": 6,
+        "name": "Chicken Burger",
+        "price": 450,
+        "quantity": 1
+      }
+    ],
+    "total": 450,
+    "status": "accepted",
+    "whatsappSent": false,
+    "createdAt": "2026-10-07T06:49:02.137Z",
+    "updatedAt": "2026-10-07T06:49:21.630Z"
+  }
+]
