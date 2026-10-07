@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Ramzan Zafar Restaurant - Admin Panel</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f8;
+            color: #222;
+        }
+
+        header {
+            background: #222;
+            color: white;
+            padding: 18px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 25px auto;
+            padding: 0 15px;
+        }
+
+        .login-box,
+        .orders-box {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .login-box {
+            max-width: 450px;
+            margin: 60px auto;
+        }
+
+        input,
+        select,
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 8px;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 15px;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            background: #222;
+            color: white;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .order-card {
+            border: 1px solid #ddd;
+            border-radius: 10px;
+            padding: 18px;
+            margin-bottom: 18px;
+            background: #fff;
+        }
+
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 12px;
+            margin-bottom: 12px;
+        }
+
+        .order-id {
+            font-weight: bold;
+        }
+
+        .status {
+            padding: 6px 10px;
+            border-radius: 5px;
+            background: #eee;
+            font-weight: bold;
+        }
+
+        .items {
+            background: #f8f8f8;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 12px 0;
+        }
+
+        .item-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .item-row:last-child {
+            border-bottom: none;
+        }
+
+        .total {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 15px 0;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .actions button {
+            margin: 0;
+        }
+
+        .message {
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .error {
+            background: #ffdede;
+            color: #a00000;
+        }
+
+        .success {
+            background: #ddffdd;
+            color: #006600;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .top-bar button {
+            width: auto;
+            padding: 10px 18px;
+            margin: 0;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 40px;
+            color: #777;
+        }
+
+        @media (max-width: 700px) {
+
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .actions {
+                grid-template-columns: 1fr;
+            }
+
+            .top-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .top-bar button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Ramzan Zafar Restaurant</h1>
+    <div>Admin Panel</div>
+</header>
+
+
+<div class="container">
+
+    <!-- LOGIN -->
+
+    <div id="loginSection" class="login-box">
+
+        <h2>Admin Login</h2>
+
+        <p>
+            Enter your Admin API Key.
+        </p>
+
+        <div id="loginMessage" class="message error"></div>
+
+        <label>Admin API Key</label>
+
+        <input
+            type="password"
+            id="adminKey"
+            placeholder="Enter admin key"
+        >
+
+        <button onclick="loginAdmin()">
+            Login
+        </button>
+
+    </div>
+
+
+    <!-- ORDERS -->
+
+    <div id="ordersSection" class="orders-box" style="display:none;">
+
+        <div class="top-bar">
+
+            <div>
+                <h2>Restaurant Orders</h2>
+                <p id="orderCount">0 orders</p>
+            </div>
+
+            <button onclick="loadOrders()">
+                Refresh Orders
+            </button>
+
+        </div>
+
+        <div id="message" class="message"></div>
+
+        <div id="ordersList"></div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+let adminKey = "";
+
+
+/* LOGIN */
+
+function loginAdmin() {
+
+    const key =
+        document.getElementById("adminKey").value.trim();
+
+    if (!key) {
+
+        showLoginMessage(
+            "Please enter the Admin API Key."
+        );
+
+        return;
+    }
+
+    adminKey = key;
+
+    loadOrders();
+
+}
+
+
+/* LOAD ORDERS */
+
+async function loadOrders() {
+
+    try {
+
+        const response =
+            await fetch("/api/orders", {
+
+                headers: {
+                    "Authorization":
+                        "Bearer " + adminKey
+                }
+
+            });
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            showLoginMessage(
+                data.message || "Login failed."
+            );
+
+            return;
+        }
+
+
+        document.getElementById(
+            "loginSection"
+        ).style.display = "none";
+
+
+        document.getElementById(
+            "ordersSection"
+        ).style.display = "block";
+
+
+        displayOrders(data.orders);
+
+
+    } catch (error) {
+
+        showMessage(
+            "Could not connect to server.",
+            true
+        );
+
+    }
+
+}
+
+
+/* DISPLAY ORDERS */
+
+function displayOrders(orders) {
+
+    const container =
+        document.getElementById("ordersList");
+
+    document.getElementById(
+        "orderCount"
+    ).textContent =
+        orders.length +
+        (orders.length === 1 ? " order" : " orders");
+
+
+    if (!orders.length) {
+
+        container.innerHTML = `
+            <div class="empty">
+                <h3>No Orders Yet</h3>
+                <p>New customer orders will appear here.</p>
+            </div>
+        `;
+
+        return;
+    }
+
+
+    container.innerHTML =
+        orders
+            .slice()
+            .reverse()
+            .map(createOrderHTML)
+            .join("");
+
+}
+
+
+/* CREATE ORDER HTML */
+
+function createOrderHTML(order) {
+
+    const itemsHTML =
+        order.items.map(function(item) {
+
+            const itemTotal =
+                Number(item.price) *
+                Number(item.quantity);
+
+            return `
+                <div class="item-row">
+
+                    <span>
+                        ${escapeHTML(item.name)}
+                        × ${item.quantity}
+                    </span>
+
+                    <strong>
+                        Rs. ${itemTotal}
+                    </strong>
+
+                </div>
+            `;
+
+        }).join("");
+
+
+    return `
+        <div class="order-card">
+
+            <div class="order-header">
+
+                <div>
+
+                    <div class="order-id">
+                        Order ID: ${escapeHTML(order.id)}
+                    </div>
+
+                    <div>
+                        ${formatDate(order.createdAt)}
+                    </div>
+
+                </div>
+
+                <div class="status">
+                    ${formatStatus(order.status)}
+                </div>
+
+            </div>
+
+
+            <h3>Customer Information</h3>
+
+            <p>
+                <strong>Name:</strong>
+                ${escapeHTML(order.customer.name)}
+            </p>
+
+            <p>
+                <strong>Phone:</strong>
+                ${escapeHTML(order.customer.phone)}
+            </p>
+
+            <p>
+                <strong>Address:</strong>
+                ${escapeHTML(order.customer.address)}
+            </p>
+
+
+            <h3>Order Items</h3>
+
+            <div class="items">
+
+                ${itemsHTML}
+
+            </div>
+
+
+            <div class="total">
+                Total: Rs. ${order.total}
+            </div>
+
+
+            <div class="actions">
+
+                <button
+                    onclick="changeStatus('${order.id}', 'accepted')"
+                >
+                    Accept
+                </button>
+
+                <button
+                    onclick="changeStatus('${order.id}', 'declined')"
+                >
+                    Decline
+                </button>
+
+                <button
+                    onclick="changeStatus('${order.id}', 'preparing')"
+                >
+                    Preparing
+                </button>
+
+                <button
+                    onclick="changeStatus('${order.id}', 'out_for_delivery')"
+                >
+                    Out for Delivery
+                </button>
+
+                <button
+                    onclick="changeStatus('${order.id}', 'completed')"
+                >
+                    Completed
+                </button>
+
+            </div>
+
+        </div>
+    `;
+}
+
+
+/* CHANGE ORDER STATUS */
+
+async function changeStatus(orderID, status) {
+
+    try {
+
+        const response =
+            await fetch(
+                "/api/orders/" +
+                encodeURIComponent(orderID) +
+                "/status",
+                {
+
+                    method: "PATCH",
+
+                    headers: {
+
+                        "Content-Type":
+                            "application/json",
+
+                        "Authorization":
+                            "Bearer " + adminKey
+
+                    },
+
+                    body: JSON.stringify({
+                        status: status
+                    })
+
+                }
+            );
+
+
+        const data =
+            await response.json();
+
+
+        if (!response.ok) {
+
+            showMessage(
+                data.message ||
+                "Could not update order.",
+                true
+            );
+
+            return;
+        }
+
+
+        showMessage(
+            "Order status updated successfully.",
+            false
+        );
+
+
+        loadOrders();
+
+
+    } catch (error) {
+
+        showMessage(
+            "Server connection failed.",
+            true
+        );
+
+    }
+
+}
+
+
+/* FORMAT STATUS */
+
+function formatStatus(status) {
+
+    const names = {
+
+        pending: "Pending",
+
+        accepted: "Accepted",
+
+        declined: "Declined",
+
+        preparing: "Preparing",
+
+        out_for_delivery:
+            "Out for Delivery",
+
+        completed: "Completed"
+
+    };
+
+    return names[status] || status;
+
+}
+
+
+/* FORMAT DATE */
+
+function formatDate(date) {
+
+    if (!date) {
+        return "";
+    }
+
+    return new Date(date).toLocaleString();
+
+}
+
+
+/* MESSAGE */
+
+function showMessage(message, error) {
+
+    const element =
+        document.getElementById("message");
+
+    element.textContent = message;
+
+    element.className =
+        "message " +
+        (error ? "error" : "success");
+
+    element.style.display = "block";
+
+
+    setTimeout(function() {
+
+        element.style.display = "none";
+
+    }, 4000);
+
+}
+
+
+/* LOGIN MESSAGE */
+
+function showLoginMessage(message) {
+
+    const element =
+        document.getElementById("loginMessage");
+
+    element.textContent = message;
+
+    element.style.display = "block";
+
+}
+
+
+/* SECURITY */
+
+function escapeHTML(value) {
+
+    return String(value || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+
+}
+
+</script>
+
+</body>
+</html>
